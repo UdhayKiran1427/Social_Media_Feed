@@ -1,4 +1,3 @@
-import * as React from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -17,7 +16,7 @@ import { NavLink } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
-
+import axios from "axios";
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
   flexDirection: "column",
@@ -65,30 +64,37 @@ const schema = Yup.object().shape({
     .email("Please enter a valid email address")
     .required("Please enter an email address"),
   password: Yup.string()
-    .min(6, "Password must be at least 6 characters long")
+    .min(8, "Password must be at least 8 characters long")
     .required("Please enter your password"),
 });
 
 export default function SignIn() {
   const [open, setOpen] = useState(false);
-  const [message, setMessage] = useState("")
-//   const navigate = useNavigate();
+  const [message, setMessage] = useState("");
   const {
     register,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm({
     resolver: yupResolver(schema),
   });
-  const onSubmit = (data) => {
-    const { email, password } = data;
-
-    if (email || password) {
-    setOpen(true);
-    setMessage("User log in successfully")
-    // navigate("/contactform");
-    }
+  const onSubmit = async(data) => {
+   await axios
+      .post("http://localhost:5000/login", data)
+      .then((response) => {
+        console.log("Success:", response.data);
+        setOpen(true);
+        setMessage("User Login Successfully");
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        setOpen(true)
+        setMessage(error.response.data.message)
+      });
+    reset();
   };
+
   return (
     <>
       <CssBaseline enableColorScheme />

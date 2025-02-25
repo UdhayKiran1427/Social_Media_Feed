@@ -1,4 +1,3 @@
-/* eslint-disable react/jsx-no-undef */
 import { Box, FormControl, TextField, FormLabel} from "@mui/material";
 import {Button} from "@mui/material";
 import Navbar from "./Navbar";
@@ -29,19 +28,7 @@ const Profile = () => {
       });
     
       const onSubmit = (data) => {
-        const { name, email, password } = data;
-        const secretKey = "my-secret-key";
-        const cipherText = CryptoJS.AES.encrypt(password, secretKey).toString();
-    
-        const newUser = {
-          id: uuidV4(),
-          name,
-          email,
-          password: cipherText,
-          contact: [],
-        };
-        console.log(newUser)
-        navigate("/");
+        console.log(data)
       };
   return (
     <div style={{display:"flex",flexDirection:"column", alignItems:"center"}}>

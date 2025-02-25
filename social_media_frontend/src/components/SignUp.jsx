@@ -8,6 +8,7 @@ import {
   Box,
 } from "@mui/material";
 import * as Yup from "yup";
+import { NavLink } from "react-router-dom";
 import { yupResolver } from "@hookform/resolvers/yup";
 import axios from "axios";
 import SnackBar from "./SnackBar";
@@ -24,7 +25,7 @@ const validationSchema = Yup.object({
     .email("Invalid email address")
     .required("Email is required"),
   password: Yup.string()
-    .min(8, "Password must be at least 6 characters")
+    .min(8, "Password must be at least 8 characters")
     .required("Password is required"),
   isPrivate: Yup.bool(),
 
@@ -63,7 +64,12 @@ const SignUp = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 400, margin: "auto", padding: 2 }}>
+    <Box sx={{ 
+        maxWidth: 400, 
+        margin: "auto", 
+        padding: "16px 36px", 
+        boxShadow: "2px 2px 10px rgba(0, 0, 0, 0.2)" 
+      }}>
       <Typography variant="h5" gutterBottom>
         User Registration
       </Typography>
@@ -83,7 +89,6 @@ const SignUp = () => {
             />
           )}
         />
-
         <Controller
           name="lastname"
           control={control}
@@ -98,7 +103,6 @@ const SignUp = () => {
             />
           )}
         />
-
         <Controller
           name="username"
           control={control}
@@ -113,7 +117,6 @@ const SignUp = () => {
             />
           )}
         />
-
         <Controller
           name="email"
           control={control}
@@ -129,7 +132,6 @@ const SignUp = () => {
             />
           )}
         />
-
         <Controller
           name="password"
           control={control}
@@ -145,7 +147,6 @@ const SignUp = () => {
             />
           )}
         />
-
         <Controller
           name="isPrivate"
           control={control}
@@ -158,7 +159,6 @@ const SignUp = () => {
             />
           )}
         />
-
         <Button
           variant="contained"
           color="primary"
@@ -166,9 +166,14 @@ const SignUp = () => {
           type="submit"
           sx={{ mt: 2 }}
         >
-          Submit
+          Sign Up
         </Button>
       </form>
+      <Box sx={{ display: "flex", flexDirection: "column",paddingTop:2 }}>
+            <Typography sx={{ textAlign: "center" }}>
+              Already have an account? <NavLink to="/">Sign in</NavLink>
+            </Typography>
+          </Box>
       <SnackBar open={open} set={setOpen} message={message}/>
     </Box>
   );
