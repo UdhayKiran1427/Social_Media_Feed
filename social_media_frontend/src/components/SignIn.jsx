@@ -12,6 +12,8 @@ import SnackBar from "./SnackBar";
 import { useState } from "react";
 import { styled } from "@mui/material/styles";
 import { NavLink } from "react-router-dom";
+import Cookies from "js-cookie";
+
 // import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -84,8 +86,11 @@ export default function SignIn() {
       .post("http://localhost:5000/login", data)
       .then((response) => {
         console.log("Success:", response.data);
+        Cookies.set("authToken", response.data.data.accessToken, { expires: 1 }); // Store token in cookies
+
         setOpen(true);
         setMessage("User Login Successfully");
+
       })
       .catch((error) => {
         console.error("Error:", error);

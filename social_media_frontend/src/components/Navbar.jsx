@@ -12,7 +12,9 @@ import MenuItem from "@mui/material/MenuItem";
 import AdbIcon from "@mui/icons-material/Adb";
 import { NavLink } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
 function Navbar() {
+
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const navigate = useNavigate();
   const handleOpenNavMenu = (event) => {
@@ -22,8 +24,10 @@ function Navbar() {
     setAnchorElNav(null);
   };
   const handleLogOut = () => {
-    navigate("/")
+    Cookies.remove("authToken"); // Remove token from cookies
+    navigate("/");
   }
+
   return (
     <AppBar position="static">
       <Container maxWidth="xl">

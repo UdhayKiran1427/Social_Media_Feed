@@ -13,7 +13,9 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import axios from "axios";
 import SnackBar from "./SnackBar";
 import { useState } from "react";
+import Cookies from "js-cookie";
 const validationSchema = Yup.object({
+
   firstname: Yup.string()
     .min(2, "First name must have atleast 2 characters")
     .required("First name is required"),
@@ -56,8 +58,10 @@ const SignUp = () => {
       .post("http://localhost:5000/sign-up", data)
       .then((response) => {
         console.log("Success:", response.data);
-        setOpen(true)
+        Cookies.set("authToken", response.data.token, { expires: 1 }); 
+        setOpen(true);
         setMessage(response.data.message);
+
       })
       .catch((error) => console.error("Error:", error));
     reset();
