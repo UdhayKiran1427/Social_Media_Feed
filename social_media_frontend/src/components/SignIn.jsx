@@ -1,178 +1,72 @@
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import CssBaseline from "@mui/material/CssBaseline";
-import Divider from "@mui/material/Divider";
-import FormLabel from "@mui/material/FormLabel";
-import FormControl from "@mui/material/FormControl";
-import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
-import Stack from "@mui/material/Stack";
-import MuiCard from "@mui/material/Card";
-import SnackBar from "./SnackBar";
-import { useState } from "react";
-import { styled } from "@mui/material/styles";
-import { NavLink } from "react-router-dom";
-import Cookies from "js-cookie";
+import React, { useState } from 'react';
+import { TextField, Button, Typography, Box, Paper } from '@mui/material';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as Yup from 'yup';
+import { useLoginMutation } from '../apiSlice';
+import { useAuth } from '../AuthContext';
 
-// import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as Yup from "yup";
-import axios from "axios";
-const Card = styled(MuiCard)(({ theme }) => ({
-  display: "flex",
-  flexDirection: "column",
-  alignSelf: "center",
-  width: "100%",
-  padding: theme.spacing(4),
-  gap: theme.spacing(2),
-  margin: "auto",
-  boxShadow:
-    "hsla(220, 30%, 5%, 0.05) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px",
-  [theme.breakpoints.up("sm")]: {
-    width: "450px",
-  },
-  ...theme.applyStyles("dark", {
-    boxShadow:
-      "hsla(220, 30%, 5%, 0.5) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.08) 0px 15px 35px -5px",
-  }),
-}));
-
-const SignInContainer = styled(Stack)(({ theme }) => ({
-  height: "calc((1 - var(--template-frame-height, 0)) * 100dvh)",
-  minHeight: "100%",
-  padding: theme.spacing(2),
-  [theme.breakpoints.up("sm")]: {
-    padding: theme.spacing(4),
-  },
-  "&::before": {
-    content: '""',
-    display: "block",
-    position: "absolute",
-    zIndex: -1,
-    inset: 0,
-    backgroundImage:
-      "radial-gradient(ellipse at 50% 50%, hsl(210, 100%, 97%), hsl(0, 0%, 100%))",
-    backgroundRepeat: "no-repeat",
-    ...theme.applyStyles("dark", {
-      backgroundImage:
-        "radial-gradient(at 50% 50%, hsla(210, 100%, 16%, 0.5), hsl(220, 30%, 5%))",
-    }),
-  },
-}));
-
-const schema = Yup.object().shape({
-  email: Yup.string()
-    .email("Please enter a valid email address")
-    .required("Please enter an email address"),
-  password: Yup.string()
-    .min(8, "Password must be at least 8 characters long")
-    .required("Please enter your password"),
+const validationSchema = Yup.object({
+  email: Yup.string().email("Invalid email address").required("Email is required."),
+  password: Yup.string().required("Password is required."),
 });
 
-export default function SignIn() {
-  const [open, setOpen] = useState(false);
-  const [message, setMessage] = useState("");
+const SignIn = () => {
+  const [error, setError] = useState(null);
+  const { login } = useAuth();
+  const [loginUser] = useLoginMutation();
+
   const {
     register,
     handleSubmit,
     formState: { errors },
-    reset,
   } = useForm({
-    resolver: yupResolver(schema),
+    resolver: yupResolver(validationSchema),
   });
-  const onSubmit = async(data) => {
-   await axios
-      .post("http://localhost:5000/login", data)
-      .then((response) => {
-        console.log("Success:", response.data);
-        Cookies.set("authToken", response.data.data.accessToken, { expires: 1 }); // Store token in cookies
 
-        setOpen(true);
-        setMessage("User Login Successfully");
-
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-        setOpen(true)
-        setMessage(error.response.data.message)
-      });
-    reset();
+  const onSubmit = async (data) => {
+    try {
+      const response = await loginUser(data).unwrap();
+      login(response); 
+    } catch (err) {
+      setError(err.data?.message || 'Login failed');
+    }
   };
 
   return (
-    <>
-      <CssBaseline enableColorScheme />
-      <SignInContainer direction="column" justifyContent="space-between">
-        <Card variant="outlined">
-          <Typography
-            component="h1"
-            variant="h4"
-            sx={{ width: "100%", fontSize: "clamp(2rem, 10vw, 2.15rem)" }}
-          >
-            Sign in
-          </Typography>
-          <Box
-            component="form"
-            noValidate
-            onSubmit={handleSubmit(onSubmit)}
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              width: "100%",
-              gap: 2,
-            }}
-          >
-            <FormControl>
-              <FormLabel htmlFor="email">Email</FormLabel>
-              <TextField
-                error={!!errors.email}
-                helperText={errors.email?.message}
-                id="email"
-                type="email"
-                name="email"
-                placeholder="your@email.com"
-                autoComplete="email"
-                autoFocus
-                required
-                fullWidth
-                {...register("email")}
-                variant="outlined"
-                color={errors.email ? "error" : "primary"}
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel htmlFor="password">Password</FormLabel>
-              <TextField
-                error={!!errors.password}
-                helperText={errors.password?.message}
-                name="password"
-                placeholder="••••••"
-                type="password"
-                id="password"
-                autoComplete="current-password"
-                autoFocus
-                required
-                fullWidth
-                {...register("password")}
-                variant="outlined"
-                color={errors.password ? "error" : "primary"}
-              />
-            </FormControl>
-            <Button type="submit" fullWidth variant="contained">
-              Sign in
-            </Button>
-          </Box>
-          <Divider>or</Divider>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <Typography sx={{ textAlign: "center" }}>
-              Don&apos;t have an account?
-              <NavLink to="/signup"> Sign up</NavLink>
-            </Typography>
-          </Box>
-        </Card>
-      </SignInContainer>
-      <SnackBar open={open} set={setOpen} message={message} />
-    </>
+    <Box sx={{ minHeight: "100vh", bgcolor: "#f5f5f5", display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
+        <Typography variant="h5" gutterBottom>
+          Sign In
+        </Typography>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <TextField
+            {...register("email")}
+            label="email"
+            fullWidth
+            required
+            error={!!errors.username}
+            helperText={errors.username?.message}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            {...register("password")}
+            label="Password"
+            type="password"
+            fullWidth
+            required
+            error={!!errors.password}
+            helperText={errors.password?.message}
+            sx={{ mb: 2 }}
+          />
+          <Button type="submit" variant="contained" fullWidth>
+            Sign In
+          </Button>
+          {error && <Typography color="error" sx={{ mt: 2 }}>{error}</Typography>}
+        </form>
+      </Paper>
+    </Box>
   );
-}
+};
+
+export default SignIn;

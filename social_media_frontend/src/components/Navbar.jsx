@@ -14,7 +14,6 @@ import { NavLink } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 function Navbar() {
-
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const navigate = useNavigate();
   const handleOpenNavMenu = (event) => {
@@ -24,9 +23,11 @@ function Navbar() {
     setAnchorElNav(null);
   };
   const handleLogOut = () => {
-    Cookies.remove("authToken"); // Remove token from cookies
+    console.log("Logout button clicked"); // Debugging log
+
+    Cookies.remove("authToken");
     navigate("/");
-  }
+  };
 
   return (
     <AppBar position="static">
@@ -119,7 +120,6 @@ function Navbar() {
               sx={{ my: 2, color: "white", display: "block" }}
             >
               <NavLink
-                activeClassName="selected"
                 to="/home"
                 style={{ color: "white", textDecoration: "none" }}
               >
@@ -129,15 +129,7 @@ function Navbar() {
             <Button
               onClick={handleCloseNavMenu}
               sx={{ my: 2, color: "white", display: "block" }}
-            >
-              <NavLink
-                to="/feed"
-                style={{ color: "white", textDecoration: "none" }}
-              >
-                {" "}
-                Post Feed
-              </NavLink>
-            </Button>
+            ></Button>
             <Button
               onClick={handleCloseNavMenu}
               sx={{ my: 2, color: "white", display: "block" }}

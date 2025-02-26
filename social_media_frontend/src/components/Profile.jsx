@@ -1,158 +1,229 @@
 import { useState, useEffect } from "react";
-import { Box, FormControl, TextField, FormLabel, CircularProgress, Typography } from "@mui/material";
-import { Button } from "@mui/material";
+import {
+  Box,
+  FormControl,
+  TextField,
+  FormLabel,
+  CircularProgress,
+  Typography,
+  FormControlLabel,
+  Checkbox,
+  Button,
+  Paper,
+  Avatar,
+  Grid,
+} from "@mui/material";
 import Navbar from "./Navbar";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
-import axios from "axios";
-import Cookies from "js-cookie";
-
+import { useGetUserQuery, useUpdateUserMutation } from '../apiSlice';
+import { useAuth } from '../AuthContext';
 
 const validationSchema = Yup.object({
-  name: Yup.string().required("Name is required."),
-  email: Yup.string()
-    .email("Please enter a valid email address.")
-    .required("Email address is required.")
-    ,
-  password: Yup.string()
-    .required("Password is required.")
-    .min(6, "Password must be at least 6 characters long."),
-  confirmPassword: Yup.string()
-    .required("Confirm password is required.")
-    .oneOf([Yup.ref("password"), null], "Passwords must match."),
+  firstname: Yup.string().required("First Name is required."),
+  lastname: Yup.string().required("Last Name is required."),
+  username: Yup.string().required("Username is required."),
+  isPrivate: Yup.boolean(),
 });
+
 const Profile = () => {
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  
+  const [isEditing, setIsEditing] = useState(false);
+  const { user } = useAuth();
+  const { data: profileData, error } = useGetUserQuery();
+  const [updateUser] = useUpdateUserMutation();
+  const [updateMessage, setUpdateMessage] = useState(null);
+
   const {
     register,
     handleSubmit,
     formState: { errors },
     setValue,
+    watch,
   } = useForm({
     resolver: yupResolver(validationSchema),
   });
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const token = Cookies.get("authToken");
-        const response = await axios.get("http://localhost:5000/profile", {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setProfile(response.data);
-        setValue("name", response.data.name);
-        setValue("email", response.data.email);
-      } catch (err) {
-        setError(err.response?.data?.message || "Failed to fetch profile");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
-  }, [setValue]);
+    if (profileData) {
+      setValue("firstname", profileData.firstname);
+      setValue("lastname", profileData.lastname);
+      setValue("username", profileData.username);
+      setValue("isPrivate", profileData.isPrivate);
+    }
+  }, [profileData, setValue]);
 
   const onSubmit = async (data) => {
     try {
-      const token = Cookies.get("authToken");
-      await axios.put("http://localhost:5000/profile", data, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await updateUser(data).unwrap();
+      console.log("Update Success");
+      setUpdateMessage("Profile updated successfully");
+      setIsEditing(false); // Exit edit mode on success
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to update profile");
+      console.error("Failed to update profile:", err);
+      setUpdateMessage(null);
     }
   };
 
+  const handleEditToggle = () => {
+    setIsEditing(!isEditing);
+    setUpdateMessage(null); // Clear success message when toggling
+  };
+
   return (
-    <div style={{display:"flex",flexDirection:"column", alignItems:"center"}}>
-      <Navbar/>
-      {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+    <Box sx={{ minHeight: "100vh", bgcolor: "#f5f5f5" }}>
+      <Navbar />
+      <Box sx={{ maxWidth: 800, mx: "auto", p: 3 }}>
+        {error ? (
+          <Typography color="error" sx={{ textAlign: "center", mt: 2 }}>
+            {error}
+          </Typography>
+        ) : !profileData ? ( 
           <CircularProgress />
-        </Box>
-      ) : error ? (
-        <Typography color="error" sx={{ mt: 2 }}>
-          {error}
-        </Typography>
-      ) : (
-        <>
-          <h1>Profile</h1>
+        ) : (
+          <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
+            {/* Profile Header */}
+            <Grid container spacing={3} alignItems="center">
+              <Grid item>
+                <Avatar
+                  sx={{
+                    width: 120,
+                    height: 120,
+                    bgcolor: "#1976d2",
+                    fontSize: 48,
+                    fontWeight: "bold",
+                  }}
+                >
+                  {`${watch("firstname")?.charAt(0)?.toUpperCase() || ""}${watch("lastname")?.charAt(0)?.toUpperCase() || ""}`}
+                </Avatar>
+              </Grid>
+              <Grid item xs>
+                <Typography variant="h4" gutterBottom>
+                  {watch("firstname")} {watch("lastname")}
+                </Typography>
+                <Typography variant="subtitle1" color="text.secondary">
+                  @{watch("username")}
+                </Typography>
+              </Grid>
+              <Grid item>
+                <Button
+                  variant="outlined"
+                  onClick={handleEditToggle}
+                  sx={{ textTransform: "none" }}
+                >
+                  {isEditing ? "Cancel" : "Edit Profile"}
+                </Button>
+              </Grid>
+            </Grid>
 
-          <Box
-            component="form"
-            sx={{ display: "flex", flexDirection: "column", gap: 1 }}
-            onSubmit={handleSubmit(onSubmit)}
-          >
+            {/* Stats */}
+            <Box sx={{ mt: 3, display: "flex", gap: 4 }}>
+              <Typography variant="body1">
+                <strong>{profileData.followersCount || 0}</strong> Followers
+              </Typography>
+              <Typography variant="body1">
+                <strong>{profileData.followingCount || 0}</strong> Following
+              </Typography>
+              <Typography variant="body1">
+                <strong>{profileData.postsCount || 0}</strong> Posts
+              </Typography>
+            </Box>
 
-            <FormControl>
-              <FormLabel htmlFor="name">Full name</FormLabel>
-              <TextField
-                {...register("name")}
-                autoComplete="name"
-                fullWidth
-                placeholder="Enter name"
-                error={!!errors.name}
-                helperText={errors.name?.message}
-                color={errors.name ? "error" : "primary"}
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel htmlFor="email">Email</FormLabel>
-              <TextField
-                {...register("email")}
-                required
-                fullWidth
-                placeholder="your@email.com"
-                name="email"
-                autoComplete="email"
-                variant="outlined"
-                error={!!errors.email}
-                helperText={errors.email?.message}
-                color={errors.email ? "error" : "primary"}
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel htmlFor="password">Password</FormLabel>
-              <TextField
-                {...register("password")}
-                required
-                fullWidth
-                name="password"
-                placeholder="••••••"
-                type="password"
-                variant="outlined"
-                error={!!errors.password}
-                helperText={errors.password?.message}
-                color={errors.password ? "error" : "primary"}
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel htmlFor="confirmPassword">Confirm Password</FormLabel>
-              <TextField
-                {...register("confirmPassword")}
-                required
-                fullWidth
-                name="confirmPassword"
-                placeholder="••••••"
-                type="password"
-                variant="outlined"
-                error={!!errors.confirmPassword}
-                helperText={errors.confirmPassword?.message}
-                color={errors.confirmPassword ? "error" : "primary"}
-              />
-            </FormControl>
-            <Button type="submit" fullWidth variant="contained">
-              Update Profile
-            </Button>
-          </Box>
-        </>
-      )}
-    </div>
+            {/* Profile Details */}
+            <Box sx={{ mt: 4 }}>
+              {isEditing ? (
+                <Box
+                  component="form"
+                  onSubmit={handleSubmit(onSubmit)}
+                  sx={{ display: "flex", flexDirection: "column", gap: 3 }}
+                >
+                  <FormControl>
+                    <FormLabel>First Name</FormLabel>
+                    <TextField
+                      {...register("firstname")}
+                      autoComplete="given-name"
+                      fullWidth
+                      placeholder="Enter first name"
+                      error={!!errors.firstname}
+                      helperText={errors.firstname?.message}
+                      disabled={!isEditing}
+                    />
+                  </FormControl>
+                  <FormControl>
+                    <FormLabel>Last Name</FormLabel>
+                    <TextField
+                      {...register("lastname")}
+                      autoComplete="family-name"
+                      fullWidth
+                      placeholder="Enter last name"
+                      error={!!errors.lastname}
+                      helperText={errors.lastname?.message}
+                      disabled={!isEditing}
+                    />
+                  </FormControl>
+                  <FormControl>
+                    <FormLabel>Username</FormLabel>
+                    <TextField
+                      {...register("username")}
+                      fullWidth
+                      placeholder="Enter username"
+                      error={!!errors.username}
+                      helperText={errors.username?.message}
+                      disabled={!isEditing}
+                    />
+                  </FormControl>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        {...register("isPrivate")}
+                        checked={watch("isPrivate") || false}
+                        color="primary"
+                        name="isPrivate"
+                        disabled={!isEditing}
+                      />
+                    }
+                    label="Private Profile"
+                  />
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    fullWidth
+                    disabled={!isEditing}
+                    sx={{ mt: 2 }}
+                  >
+                    Save Changes
+                  </Button>
+                </Box>
+              ) : (
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  <Typography variant="body1">
+                    <strong>First Name:</strong> {profileData.firstname}
+                  </Typography>
+                  <Typography variant="body1">
+                    <strong>Last Name:</strong> {profileData.lastname}
+                  </Typography>
+                  <Typography variant="body1">
+                    <strong>Username:</strong> @{profileData.username}
+                  </Typography>
+                  <Typography variant="body1">
+                    <strong>Profile Privacy:</strong>{" "}
+                    {profileData.isPrivate ? "Private" : "Public"}
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+
+            {/* Success Message */}
+            {updateMessage && (
+              <Typography color="success.main" sx={{ mt: 2, textAlign: "center" }}>
+                {updateMessage}
+              </Typography>
+            )}
+          </Paper>
+        )}
+      </Box>
+    </Box>
   );
-}
+};
 
 export default Profile;

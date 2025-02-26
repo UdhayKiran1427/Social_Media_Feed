@@ -6,6 +6,7 @@ import {
   FormControlLabel,
   Typography,
   Box,
+  Paper, // Added import for Paper
 } from "@mui/material";
 import * as Yup from "yup";
 import { NavLink } from "react-router-dom";
@@ -13,9 +14,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import axios from "axios";
 import SnackBar from "./SnackBar";
 import { useState } from "react";
-import Cookies from "js-cookie";
 const validationSchema = Yup.object({
-
   firstname: Yup.string()
     .min(2, "First name must have atleast 2 characters")
     .required("First name is required"),
@@ -37,10 +36,12 @@ const SignUp = () => {
     const [open, setOpen] = useState(false);
     const [message,setMessage] = useState("");
   const {
+    register,
     control,
     handleSubmit,
     formState: { errors },
     reset,
+    error,  
   } = useForm({
     resolver: yupResolver(validationSchema),
     defaultValues: {
@@ -58,129 +59,75 @@ const SignUp = () => {
       .post("http://localhost:5000/sign-up", data)
       .then((response) => {
         console.log("Success:", response.data);
-        Cookies.set("authToken", response.data.token, { expires: 1 }); 
-        setOpen(true);
+        setOpen(true)
         setMessage(response.data.message);
-
       })
       .catch((error) => console.error("Error:", error));
     reset();
   };
 
   return (
-    <Box sx={{ 
-        maxWidth: 400, 
-        margin: "auto", 
-        padding: "16px 36px", 
-        boxShadow: "2px 2px 10px rgba(0, 0, 0, 0.2)" 
-      }}>
-      <Typography variant="h5" gutterBottom>
-        User Registration
-      </Typography>
-
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <Controller
-          name="firstname"
-          control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              label="First Name"
-              fullWidth
-              margin="normal"
-              error={!!errors.firstname}
-              helperText={errors.firstname?.message}
-            />
-          )}
-        />
-        <Controller
-          name="lastname"
-          control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              label="Last Name"
-              fullWidth
-              margin="normal"
-              error={!!errors.lastname}
-              helperText={errors.lastname?.message}
-            />
-          )}
-        />
-        <Controller
-          name="username"
-          control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              label="Username"
-              fullWidth
-              margin="normal"
-              error={!!errors.username}
-              helperText={errors.username?.message}
-            />
-          )}
-        />
-        <Controller
-          name="email"
-          control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              label="Email"
-              type="email"
-              fullWidth
-              margin="normal"
-              error={!!errors.email}
-              helperText={errors.email?.message}
-            />
-          )}
-        />
-        <Controller
-          name="password"
-          control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              label="Password"
-              type="password"
-              fullWidth
-              margin="normal"
-              error={!!errors.password}
-              helperText={errors.password?.message}
-            />
-          )}
-        />
-        <Controller
-          name="isPrivate"
-          control={control}
-          render={({ field }) => (
-            <FormControlLabel
-              control={
-                <Checkbox {...field} checked={field.value} color="primary" />
-              }
-              label="Private Profile"
-            />
-          )}
-        />
-        <Button
-          variant="contained"
-          color="primary"
-          fullWidth
-          type="submit"
-          sx={{ mt: 2 }}
-        >
+    <Box sx={{ minHeight: "100vh", bgcolor: "#f5f5f5", display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
+        <Typography variant="h5" gutterBottom>
           Sign Up
-        </Button>
-      </form>
-      <Box sx={{ display: "flex", flexDirection: "column",paddingTop:2 }}>
-            <Typography sx={{ textAlign: "center" }}>
-              Already have an account? <NavLink to="/">Sign in</NavLink>
-            </Typography>
-          </Box>
-      <SnackBar open={open} set={setOpen} message={message}/>
+        </Typography>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <TextField
+            {...register("username")}
+            label="Username"
+            fullWidth
+            required
+            error={!!errors.username}
+            helperText={errors.username?.message}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            {...register("email")}
+            label="email"
+            fullWidth
+            required
+            error={!!errors.username}
+            helperText={errors.username?.message}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            {...register("password")}
+            label="Password"
+            type="password"
+            fullWidth
+            required
+            error={!!errors.password}
+            helperText={errors.password?.message}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            {...register("firstname")}
+            label="First Name"
+            fullWidth
+            required
+            error={!!errors.firstname}
+            helperText={errors.firstname?.message}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            {...register("lastname")}
+            label="Last Name"
+            fullWidth
+            required
+            error={!!errors.lastname}
+            helperText={errors.lastname?.message}
+            sx={{ mb: 2 }}
+          />
+          <Button type="submit" variant="contained" fullWidth>
+            Sign Up
+          </Button>
+          {error && <Typography color="error" sx={{ mt: 2 }}>{error}</Typography>}
+        </form>
+      </Paper>
     </Box>
   );
 };
+
 
 export default SignUp;

@@ -1,5 +1,7 @@
 import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { AuthProvider } from './AuthContext';
+
 import SignUp from "./components/SignUp";
 import SignIn from "./components/SignIn";
 import Home from "./components/Home";
@@ -7,18 +9,18 @@ import PostFeed from "./components/PostFeed";
 import Profile from "./components/Profile";
 function App() {
   return (
-    <>
-      <BrowserRouter>
+    <AuthProvider>
+      <Router>
         <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
-          <Route path="/" element={<SignIn/>} />
-          <Route path="/home" element={<Home/>} />
-          <Route path="/feed" element={<PostFeed/>} />
-          <Route path="/profile" element={<Profile/> } />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
-      </BrowserRouter>
-    </>
+      </Router>
+    </AuthProvider>
   );
 }
+
 
 export default App;
