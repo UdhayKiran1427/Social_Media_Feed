@@ -10,12 +10,14 @@ import Container from "@mui/material/Container";
 import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
 import AdbIcon from "@mui/icons-material/Adb";
+import ConnectWithoutContactIcon from "@mui/icons-material/ConnectWithoutContact";
 import { NavLink } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import Cookies from "js-cookie";
+import { useAuth } from "../AuthContext";
 function Navbar() {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
   };
@@ -23,9 +25,7 @@ function Navbar() {
     setAnchorElNav(null);
   };
   const handleLogOut = () => {
-    console.log("Logout button clicked"); // Debugging log
-
-    Cookies.remove("authToken");
+    logout();
     navigate("/");
   };
 
@@ -33,7 +33,9 @@ function Navbar() {
     <AppBar position="static">
       <Container maxWidth="xl">
         <Toolbar disableGutters>
-          <AdbIcon sx={{ display: { xs: "none", md: "flex" }, mr: 1 }} />
+          <ConnectWithoutContactIcon
+            sx={{ display: { xs: "none", md: "flex" }, mr: 2, height: 55 }}
+          />
           <Typography
             variant="h6"
             noWrap
@@ -44,7 +46,7 @@ function Navbar() {
               display: { xs: "none", md: "flex" },
               fontFamily: "monospace",
               fontWeight: 700,
-              letterSpacing: ".3rem",
+              letterSpacing: ".1rem",
               color: "inherit",
               textDecoration: "none",
             }}
@@ -80,17 +82,22 @@ function Navbar() {
             >
               <MenuItem onClick={handleCloseNavMenu}>
                 <Typography sx={{ textAlign: "center", display: "block" }}>
-                  Home
+                  <NavLink
+                    to="/home"
+                    style={{ color: "black", textDecoration: "none" }}
+                  >
+                    Home
+                  </NavLink>
                 </Typography>
               </MenuItem>
               <MenuItem onClick={handleCloseNavMenu}>
                 <Typography sx={{ textAlign: "center", display: "block" }}>
-                  Post Feed
-                </Typography>
-              </MenuItem>
-              <MenuItem onClick={handleCloseNavMenu}>
-                <Typography sx={{ textAlign: "center", display: "block" }}>
-                  Profile
+                  <NavLink
+                    to="/profile"
+                    style={{ color: "black", textDecoration: "none" }}
+                  >
+                    Profile
+                  </NavLink>
                 </Typography>
               </MenuItem>
             </Menu>
@@ -107,14 +114,14 @@ function Navbar() {
               flexGrow: 1,
               fontFamily: "monospace",
               fontWeight: 700,
-              letterSpacing: ".3rem",
+              letterSpacing: "0rem",
               color: "inherit",
               textDecoration: "none",
             }}
           >
             Social Feed
           </Typography>
-          <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
+          <Box sx={{ flexGrow: 1, display: { xs: "flex", md: "flex" } }}>
             <Button
               onClick={handleCloseNavMenu}
               sx={{ my: 2, color: "white", display: "block" }}
@@ -126,10 +133,6 @@ function Navbar() {
                 Home
               </NavLink>
             </Button>
-            <Button
-              onClick={handleCloseNavMenu}
-              sx={{ my: 2, color: "white", display: "block" }}
-            ></Button>
             <Button
               onClick={handleCloseNavMenu}
               sx={{ my: 2, color: "white", display: "block" }}

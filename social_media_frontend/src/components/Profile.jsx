@@ -8,32 +8,39 @@ import {
   Typography,
   FormControlLabel,
   Checkbox,
-  Button,
   Paper,
-  Avatar,
   Grid,
+  Avatar,
 } from "@mui/material";
+import { Button } from "@mui/material";
 import Navbar from "./Navbar";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
-import { useGetUserQuery, useUpdateUserMutation } from '../apiSlice';
-import { useAuth } from '../AuthContext';
+import Cookies from "js-cookie";
+import {
+  useUpdateUserMutation,
+  useGetUserQuery,
+} from "../../Store/Slice/apiSlice";
 
 const validationSchema = Yup.object({
-  firstname: Yup.string().required("First Name is required."),
-  lastname: Yup.string().required("Last Name is required."),
-  username: Yup.string().required("Username is required."),
+  firstname: Yup.string()
+    .required("First Name is required")
+    .min(3, "First name must have atleast 3 characters"),
+  lastname: Yup.string()
+    .required("Last Name is required")
+    .min(3, "Last name must have atleast 3 characters"),
+  username: Yup.string()
+    .required("Username is required")
+    .min(3, "Username must have atleast 4 characters"),
   isPrivate: Yup.boolean(),
 });
-
 const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
-  const { user } = useAuth();
-  const { data: profileData, error } = useGetUserQuery();
+  const [error, setError] = useState(null);
   const [updateUser] = useUpdateUserMutation();
+  let { data: userData } = useGetUserQuery();
   const [updateMessage, setUpdateMessage] = useState(null);
-
   const {
     register,
     handleSubmit,
@@ -42,47 +49,55 @@ const Profile = () => {
     watch,
   } = useForm({
     resolver: yupResolver(validationSchema),
+    defaultValues: {
+      firstname: "",
+      lastname: "",
+      username: "",
+      isPrivate: false,
+    },
   });
-
   useEffect(() => {
-    if (profileData) {
-      setValue("firstname", profileData.firstname);
-      setValue("lastname", profileData.lastname);
-      setValue("username", profileData.username);
-      setValue("isPrivate", profileData.isPrivate);
+    if (userData?.data) {
+      setValue("firstname", userData.data.firstname || "");
+      setValue("lastname", userData.data.lastname || "");
+      setValue("username", userData.data.username || "");
+      setValue("isPrivate", userData.data.isPrivate || false);
     }
-  }, [profileData, setValue]);
-
+  }, [userData, setValue]);
   const onSubmit = async (data) => {
     try {
-      await updateUser(data).unwrap();
-      console.log("Update Success");
-      setUpdateMessage("Profile updated successfully");
-      setIsEditing(false); // Exit edit mode on success
+      setError(null);
+      const token = Cookies.get("accessToken");
+      if (!token) throw new Error("No authentication token found");
+      const response = await updateUser({ data, token }).unwrap();
+      if (response.status === "success") {
+        console.log("Profile updated successfully");
+        setIsEditing(false);
+      }
+      if (response.status === "error") {
+        console.log(response.message);
+      }
     } catch (err) {
-      console.error("Failed to update profile:", err);
-      setUpdateMessage(null);
+      setError(err.data?.message || "Failed to update profile");
     }
   };
-
   const handleEditToggle = () => {
     setIsEditing(!isEditing);
-    setUpdateMessage(null); // Clear success message when toggling
+    setUpdateMessage(null);
   };
 
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "#f5f5f5" }}>
+    <Box sx={{ minHeight: "95vh", bgcolor: "#f5f5f5" }}>
       <Navbar />
       <Box sx={{ maxWidth: 800, mx: "auto", p: 3 }}>
         {error ? (
           <Typography color="error" sx={{ textAlign: "center", mt: 2 }}>
             {error}
           </Typography>
-        ) : !profileData ? ( 
+        ) : !userData ? (
           <CircularProgress />
         ) : (
           <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
-            {/* Profile Header */}
             <Grid container spacing={3} alignItems="center">
               <Grid item>
                 <Avatar
@@ -94,7 +109,9 @@ const Profile = () => {
                     fontWeight: "bold",
                   }}
                 >
-                  {`${watch("firstname")?.charAt(0)?.toUpperCase() || ""}${watch("lastname")?.charAt(0)?.toUpperCase() || ""}`}
+                  {`${watch("firstname")?.charAt(0)?.toUpperCase() || ""}${
+                    watch("lastname")?.charAt(0)?.toUpperCase() || ""
+                  }`}
                 </Avatar>
               </Grid>
               <Grid item xs>
@@ -115,21 +132,17 @@ const Profile = () => {
                 </Button>
               </Grid>
             </Grid>
-
-            {/* Stats */}
             <Box sx={{ mt: 3, display: "flex", gap: 4 }}>
               <Typography variant="body1">
-                <strong>{profileData.followersCount || 0}</strong> Followers
+                <strong>Followers: 0</strong>
               </Typography>
               <Typography variant="body1">
-                <strong>{profileData.followingCount || 0}</strong> Following
+                <strong>Following: 0</strong>
               </Typography>
               <Typography variant="body1">
-                <strong>{profileData.postsCount || 0}</strong> Posts
+                <strong>Posts: 0</strong>
               </Typography>
             </Box>
-
-            {/* Profile Details */}
             <Box sx={{ mt: 4 }}>
               {isEditing ? (
                 <Box
@@ -197,25 +210,26 @@ const Profile = () => {
               ) : (
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                   <Typography variant="body1">
-                    <strong>First Name:</strong> {profileData.firstname}
+                    <strong>First Name:</strong> {userData.data.firstname}
                   </Typography>
                   <Typography variant="body1">
-                    <strong>Last Name:</strong> {profileData.lastname}
+                    <strong>Last Name:</strong> {userData.data.lastname}
                   </Typography>
                   <Typography variant="body1">
-                    <strong>Username:</strong> @{profileData.username}
+                    <strong>Username:</strong> @{userData.data.username}
                   </Typography>
                   <Typography variant="body1">
-                    <strong>Profile Privacy:</strong>{" "}
-                    {profileData.isPrivate ? "Private" : "Public"}
+                    <strong>Profile Privacy:</strong>
+                    {userData.data.isPrivate ? "Private" : "Public"}
                   </Typography>
                 </Box>
               )}
             </Box>
-
-            {/* Success Message */}
             {updateMessage && (
-              <Typography color="success.main" sx={{ mt: 2, textAlign: "center" }}>
+              <Typography
+                color="success.main"
+                sx={{ mt: 2, textAlign: "center" }}
+              >
                 {updateMessage}
               </Typography>
             )}
