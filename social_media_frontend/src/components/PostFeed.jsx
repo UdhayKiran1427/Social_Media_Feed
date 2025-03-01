@@ -17,16 +17,16 @@ import {
 } from "../../Store/Slice/apiSlice";
 
 const PostFeed = () => {
-  const [posts, setPosts] = useState([]);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const {
-    data: postData = [],
-    isLoading,
-    isError,
-    error: queryError,
-    isFetching,
-  } = useGetPostQuery({ page, perPage: 20 });
+  const [page, setPage] = useState(1); // Define page state
+
+  const [hasMore, setHasMore] = useState(true); // Define hasMore state
+
+
+  const { data: postData = [], isLoading, isError, error: queryError, isFetching } = useGetPostQuery({ page, perPage: 20 }); // Fetch posts
+
+  const [posts, setPosts] = useState([]); 
+
+
   const observer = useRef();
 
   const lastPostElementRef = useCallback(
@@ -51,15 +51,13 @@ const PostFeed = () => {
       return;
     }
 
-    if (postData && postData.length > 0) {
-      // Compute new posts directly inside useEffect
-      const newPosts = postData.filter(
-        (newPost) => !posts.some((post) => post._id === newPost._id)
-      );
-      setPosts((prevPosts) => [...prevPosts, ...newPosts]);
-      setHasMore(postData.length === 20);
+    if (postData) { 
+      setHasMore(postData.length === 20); 
+      setPosts((prevPosts) => [...prevPosts, ...postData]); 
+
     }
-  }, [postData, page]); // Removed memoizedPosts from dependencies
+
+  }, [postData, page]); 
 
   const PostItem = ({ post, isLast }) => {
     const { data: imageData, isLoading: imageLoading } = useGetImagePostQuery(post._id);
@@ -166,13 +164,10 @@ const PostFeed = () => {
   return (
     <Box sx={{ p: 3, maxWidth: "300px", mx: "auto" }}>
       <Box>
-        {posts.map((item, index) => (
-          <PostItem
-            key={item._id}
-            post={item}
-            isLast={posts.length === index + 1}
-          />
+        {postData.map((item, index) => (
+          <PostItem key={item._id} post={item} isLast={postData.length === index + 1} />
         ))}
+
         {(isLoading || isFetching) && (
           <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
             <CircularProgress />
