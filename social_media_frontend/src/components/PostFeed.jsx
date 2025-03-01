@@ -52,7 +52,8 @@ const PostFeed = () => {
   }, [postData, page]); 
 
   const PostItem = ({ post, isLast }) => {
-    const { data: imageData, isLoading: imageLoading } = useGetImagePostQuery(post._id);
+    const { data: imageData, isLoading: imageLoading, isError: imageError } = useGetImagePostQuery(post._id);
+
 
     return (
       <Box
@@ -100,7 +101,12 @@ const PostFeed = () => {
           <Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
             <CircularProgress size={24} />
           </Box>
+        ) : imageError ? (
+          <Typography color="error" sx={{ textAlign: "center", p: 2 }}>
+            Image not found.
+          </Typography>
         ) : imageData ? (
+
           <Box sx={{ width: "100%", overflow: "hidden" }}>
             <img
               src={imageData}
