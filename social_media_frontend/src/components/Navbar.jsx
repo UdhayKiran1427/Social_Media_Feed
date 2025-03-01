@@ -141,7 +141,7 @@ function Navbar() {
             >
               Social Feed
             </Typography>
-            <Box sx={{ flexGrow: 1, display: { xs: "flex", md: "flex" } }}>
+            <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
               <Button
                 onClick={handleCloseNavMenu}
                 sx={{ my: 2, color: "white", display: "block" }}
