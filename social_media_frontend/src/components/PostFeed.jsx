@@ -18,14 +18,9 @@ import {
 
 const PostFeed = () => {
   const [page, setPage] = useState(1); // Define page state
-
   const [hasMore, setHasMore] = useState(true); // Define hasMore state
 
-
-  const { data: postData = [], isLoading, isError, error: queryError, isFetching } = useGetPostQuery({ page, perPage: 20 }); // Fetch posts
-
-  const [posts, setPosts] = useState([]); 
-
+  const { data: postData = [], isLoading, isError, error: queryError, isFetching } = useGetPostQuery({ page, perPage: 20 }); // Use Redux state for posts
 
   const observer = useRef();
 
@@ -46,15 +41,12 @@ const PostFeed = () => {
   useEffect(() => {
     const token = Cookies.get("accessToken");
     if (!token) {
-      setPosts([]);
       setHasMore(false);
       return;
     }
 
     if (postData) { 
       setHasMore(postData.length === 20); 
-      setPosts((prevPosts) => [...prevPosts, ...postData]); 
-
     }
 
   }, [postData, page]); 
@@ -173,12 +165,12 @@ const PostFeed = () => {
             <CircularProgress />
           </Box>
         )}
-        {!hasMore && posts.length > 0 && (
+        {!hasMore && postData.length > 0 && (
           <Typography sx={{ textAlign: "center", mt: 2 }}>
             No more posts to load.
           </Typography>
         )}
-        {!hasMore && posts.length === 0 && (
+        {!hasMore && postData.length === 0 && (
           <Typography sx={{ textAlign: "center", mt: 2 }}>
             No Post found
           </Typography>
