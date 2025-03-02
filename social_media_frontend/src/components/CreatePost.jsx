@@ -18,6 +18,13 @@ import CloseIcon from "@mui/icons-material/Close";
 import Cookies from "js-cookie";
 import { useCreatePostMutation } from "../../Store/Slice/apiSlice";
 const validationSchema = Yup.object().shape({
+  filePath: Yup.mixed()
+    .required("An image file is required")
+    .test("fileType", "Unsupported File Format", value => {
+      return value && value[0] && value[0].type.startsWith("image/");
+    })
+    ,
+
   title: Yup.string()
     .required("Title is required")
     .min(3, "Title must have atleast 3 character long"),
@@ -52,7 +59,7 @@ const CreatePost = ({ onClose, label, onPostCreated }) => {
       const response = await createPost({ data: formData, token });
       console.log(response.data.status);
       reset();
-      onPostCreated(); // Call the callback function to show snackbar
+      onPostCreated(); 
 
       onClose();
     } catch (error) {
@@ -116,6 +123,8 @@ const CreatePost = ({ onClose, label, onPostCreated }) => {
                 accept="image/*"
                 fullWidth
                 variant="outlined"
+                error={!!errors.filePath}
+                helperText={errors.filePath?.message}
               />
             </Box>
             {watch("filePath") ? (
