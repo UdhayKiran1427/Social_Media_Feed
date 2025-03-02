@@ -24,7 +24,8 @@ const validationSchema = Yup.object().shape({
   description: Yup.string(),
   isPrivate: Yup.boolean().nullable(),
 });
-const CreatePost = ({ onClose, label }) => {
+const CreatePost = ({ onClose, label, onPostCreated }) => {
+
   const {
     register,
     handleSubmit,
@@ -51,6 +52,8 @@ const CreatePost = ({ onClose, label }) => {
       const response = await createPost({ data: formData, token });
       console.log(response.data.status);
       reset();
+      onPostCreated(); // Call the callback function to show snackbar
+
       onClose();
     } catch (error) {
       console.error("Error creating post:", error);
